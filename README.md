@@ -127,11 +127,15 @@ For each sample:
 * Strong performance under **Dirichlet non-IID splits**
 * Consistently outperforms:
 
-  * FedAvg
-  * FedProx
-  * FedNoRo
-  * FedELC
-  * FedCorr
+  * [FedAvg](https://arxiv.org/abs/1602.05629)
+  * [FedProx](https://arxiv.org/abs/1812.06127)
+  * [RoFL](https://ieeexplore.ieee.org/document/9767609)
+  * [RHFL](https://openaccess.thecvf.com/content/CVPR2022/html/Fang_Robust_Federated_Learning_With_Noisy_and_Heterogeneous_Clients_CVPR_2022_paper.html)
+  * [FedLSR](https://dl.acm.org/doi/10.1145/3511808.3557654)
+  * [FedCorr](https://openaccess.thecvf.com/content/CVPR2022/html/Xu_FedCorr_Multi-Stage_Federated_Learning_for_Label_Noise_Correction_CVPR_2022_paper.html)
+  * [FedNed](https://ojs.aaai.org/index.php/AAAI/article/view/29667)
+  * [FedELC](https://dl.acm.org/doi/10.1145/3627673.3679990)
+  * [FedNoRo](https://arxiv.org/abs/2305.05230)
 
 👉 Key insight:
 **Spectral structure is a reliable signal for noisy label detection in FL** 
@@ -157,43 +161,129 @@ source .venv/bin/activate
 Example (CIFAR-10):
 
 ```bash
-python main.py \
-    --dataset cifar10 \
-    --num_clients 10 \
-    --noise_rate 0.5 \
-    --dirichlet_alpha 0.5 \
-    --model resnet18
+python main.py
 ```
 
 ---
 
 ## ⚙️ Key Hyperparameters
 
-| Parameter    | Description                            |
-| ------------ | -------------------------------------- |
-| `alpha`      | Dirichlet non-IID strength             |
-| `noise_rate` | Label corruption level                 |
-| `E1`         | Stage I epochs (client identification) |
-| `E2`         | Local training epochs                  |
-| `R`          | Relabeling interval                    |
-| `T`          | Total communication rounds             |
-| `w_KD`       | KD weight                              |
-| `tau`        | Logit adjustment strength              |
+### 📦 Dataset & Distribution
 
+| Parameter            | Description                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `dataset`            | Dataset used (e.g., CIFAR-10, CIFAR-100)                                                    |
+| `iid`                | Whether data is IID across clients                                                          |
+| `alpha_dirichlet`    | Dirichlet concentration parameter (controls non-IID severity; smaller = more heterogeneous) |
+| `non_iid_prob_class` | Probability of assigning dominant classes to clients                                        |
+| `num_users`          | Number of federated clients                                                                 |
+
+---
+
+### 🔊 Noise Configuration
+
+| Parameter        | Description                       |
+| ---------------- | --------------------------------- |
+| `noise_p`        | Label noise ratio per client      |
+| `level_n_system` | Overall system-level noise ratio  |
+| `noise_type`     | Type of noise (`sym` = symmetric) |
+
+---
+
+### 🧠 Model
+
+| Parameter    | Description                         |
+| ------------ | ----------------------------------- |
+| `model_name` | Backbone model (e.g., ResNet18)     |
+| `pretrained` | Whether to use ImageNet pretraining |
+| `batch_size` | Local training batch size           |
+
+---
+
+### 🌐 Federated Learning
+
+| Parameter     | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `fl_strategy` | FL method (`fedavg`, `fedprox`, `fedsir`, etc.) |
+| `rounds`      | Total communication rounds (T)                  |
+
+---
+
+### 🔍 Stage I: Client Identification
+
+| Parameter                     | Description                                           |
+| ----------------------------- | ----------------------------------------------------- |
+| `identification_epochs`       | Number of local epochs for client identification (E1) |
+| `identification_lr`           | Learning rate during identification                   |
+| `identification_weight_decay` | Weight decay during identification                    |
+
+---
+
+### 🔁 Training (Stage II & III)
+
+| Parameter      | Description                          |
+| -------------- | ------------------------------------ |
+| `epochs`       | Local training epochs per round (E2) |
+| `lr`           | Learning rate                        |
+| `weight_decay` | Weight decay                         |
+| `optimizer`    | Optimizer (e.g., Adam)               |
+| `seed`         | Random seed                          |
+
+---
+
+### 🔄 Relabeling (Stage II)
+
+| Parameter           | Description                                                 |
+| ------------------- | ----------------------------------------------------------- |
+| `relabeling_rounds` | Relabeling interval (R)                                     |
+| `use_relabel`       | Enable spectral relabeling                                  |
+| `svd_mode`          | Relabeling strategy (`agree` = conservative agreement rule) |
+
+---
+
+### 📚 Knowledge Distillation (KD)
+
+| Parameter  | Description                                    |
+| ---------- | ---------------------------------------------- |
+| `use_kd`   | Enable knowledge distillation                  |
+| `kd_begin` | Round to start KD                              |
+| `kd_end`   | Round to stop KD                               |
+| `kd_a`     | KD weight ( ( w_{KD} ) )                       |
+| `kd_temp`  | Temperature for soft labels                    |
+| `kd_on`    | Apply KD to (`all` samples or only `disagree`) |
+
+---
+
+### ⚖️ Loss & Aggregation
+
+| Parameter          | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `clean_loss_mode`  | Loss for clean clients (`la`, `ce`)            |
+| `noisy_loss_mode`  | Loss for noisy clients (`lakd`, `cekd`, etc.)  |
+| `aggregation_mode` | Aggregation method (`daagg` or `weighted_avg`) |
+
+---
+
+## 🔥 Notes (Important for Readers)
+
+* `alpha_dirichlet` controls **client heterogeneity**
+* `noise_p` + `level_n_system` define **label corruption severity**
+* `kd_a` is your **( w_{KD} )** in the paper formulation 
+* `relabeling_rounds` corresponds to **R (periodic relabeling)**
+* `rounds` corresponds to **T (total FL rounds)**
 ---
 
 ## 📁 Project Structure
 
 ```
 fedsir/
-│── main.py
-│── models/
-│── data/
+│── algorithm/
+│── dataset/
+│── model/
 │── utils/
-│── configs/
-│── training/
-│── spectral/
-│── README.md
+│── configs.py
+│── main.py
+│── run.py
 ```
 
 ---
@@ -213,7 +303,7 @@ fedsir/
 
 * Assumes **symmetric label noise**
 * Requires **sufficient class coverage** among clean clients
-* Performance depends on **feature quality in early training**
+* Performance depends on **feature quality**
 
 ---
 
