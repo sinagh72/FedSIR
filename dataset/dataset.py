@@ -1,0 +1,129 @@
+#dataset.py
+import os
+import numpy as np
+from torchvision import datasets, transforms
+from torchvision.datasets import ImageFolder
+
+from dataset.sampling import iid_sampling, non_iid_dirichlet_sampling
+import torch
+# ------------------------------------------------------------------
+# Transforms
+# ------------------------------------------------------------------
+def build_transforms(dataset_name: str, split: str):
+    """
+    Single transform per split.
+    Training may include augmentation.
+    Test is always deterministic.
+    """
+    dataset_name = dataset_name.lower()
+
+    # CIFAR
+    if dataset_name in ["cifar10", "cifar100"]:
+        if split == "train":
+            return transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
+            ])
+        else:
+            return transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
+            ])
+
+    # Clothing1M
+    if dataset_name == "clothing1m":
+        if split == "train":
+            return transforms.Compose([
+                transforms.Resize((256, 256)),
+                transforms.RandomCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
+            ])
+        else:
+            return transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                ),
+            ])
+
+    raise ValueError(f"Unknown dataset_name: {dataset_name}")
+
+
+# ------------------------------------------------------------------
+# Dataset loader
+# ------------------------------------------------------------------
+def get_dataset(dataset_name, num_users, iid, non_iid_prob_class, alpha_dirichlet, seed):
+    """
+    Returns:
+      dataset_train
+      dataset_test
+      dict_users
+      num_classes
+    """
+
+    name = dataset_name.lower()
+
+    # ---------------- CIFAR ----------------
+    if name == "cifar10":
+        data_path = "../data/cifar10"
+        num_classes = 10
+
+        dataset_train = datasets.CIFAR10(data_path, train=True, download=True, transform=build_transforms(name, "train"))
+        dataset_test = datasets.CIFAR10(data_path, train=False, download=True, transform=build_transforms(name, "test"))
+        y_train = np.array(dataset_train.targets)
+
+
+    elif name == "cifar100":
+        data_path = "../data/cifar100"
+        num_classes = 100
+
+        dataset_train = datasets.CIFAR100(data_path, train=True, download=True, transform=build_transforms(name, "train"))
+        dataset_test = datasets.CIFAR100(data_path, train=False, download=True, transform=build_transforms(name, "test"))
+        y_train = np.array(dataset_train.targets)
+
+    else:
+        raise ValueError(f"Unrecognized dataset: {dataset_name}")
+
+    # ---------------- client partition ----------------
+    n_train = len(dataset_train)
+    if iid:
+        dict_users = iid_sampling(n_train, num_users, seed)
+    else:
+        dict_users  = non_iid_dirichlet_sampling(y_train, num_classes, non_iid_prob_class, num_users, seed, alpha_dirichlet)
+
+    return dataset_train, dataset_test, dict_users, num_classes 
+
+
+class NoisyLabelDataset(torch.utils.data.Dataset):
+    """
+    Returns:
+      x, y_noisy, y_clean, idx_global
+    """
+    def __init__(self, base_dataset, y_noisy, y_clean):
+        self.base = base_dataset
+        self.y_noisy = np.asarray(y_noisy).astype(int)
+        self.y_clean = np.asarray(y_clean).astype(int)
+        assert len(self.y_noisy) == len(self.base)
+        assert len(self.y_clean) == len(self.base)
+
+    def __len__(self):
+        return len(self.base)
+
+    def __getitem__(self, idx):
+        x, _ = self.base[idx]  # ignore base label
+        return x, int(self.y_noisy[idx]), int(self.y_clean[idx]), int(idx)
