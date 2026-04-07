@@ -54,12 +54,14 @@ FedSIR consists of **three stages**:
 ### 1️⃣ Client Identification
 
 * Extract feature representations:
-  $$
+  ```math
   z_i = f_\phi(x_i)
-  $$
+  ```
 * Compute class-wise SVD
 * Build similarity matrix:
-  [S_{c,c'} = |v_c^T v_{c'}|]
+  ```math
+  $S_{c,c'} = |v_c^T v_{c'}|
+  ```
 * Use statistics (mean & energy) + GMM to classify:
 
   * ✅ Clean clients
@@ -71,25 +73,30 @@ FedSIR consists of **three stages**:
 
 From clean clients, construct:
 
-* Dominant direction: ( \bar{v}_c^{(r)} )
-* Residual subspace: ( \bar{V}_c^{(n)} )
+* Dominant direction:
+  ```math
+  \bar{v}_c^{(r)}$
+  ```
+* Residual subspace:
+  ```math
+  \bar{V}_c^{(n)}
+  ```
 
 For each sample:
 
 * Alignment score:
-  [
-  S^{(r)}(i,c)
-  ]
-* Residual score:
-  [
-  S^{(n)}(i,c)
-  ]
+  ```math
+  $S^{(r)}(i,c)$
+  ```
+* Residual score
+  ```math
+  $S^{(n)}(i,c)$
+  ```
 
 ✔ Relabel only if:
-[
-\hat{y}^{(r)} = \hat{y}^{(n)}
-]
-
+```math
+\hat{y}^{(r)} = \hat{y}^{(n)}$
+```
 👉 This ensures **high-confidence corrections only**
 
 ---
@@ -99,23 +106,22 @@ For each sample:
 #### Clean Clients:
 
 * Logit-adjusted CE:
-  [
+  ```math
   \mathcal{L}_{LA} = CE(f(x) + m_k, y)
-  ]
+  ```
 
 #### Noisy Clients:
 
 * Hybrid loss:
-  [
-  \mathcal{L}*{LA-KD} = w*{KD} \cdot KL(p | q) + (1-w_{KD}) \cdot CE
-  ]
-
+  ```math
+  \mathcal{L}_{LA-KD} = w_{KD} \cdot KL(p \| q) + (1 - w_{KD}) \cdot CE
+  ```
 #### Aggregation:
 
 * Distance-aware weighting:
-  [
+  ```math
   \alpha_k \propto a_k \cdot e^{-d_k}
-  ]
+  ```
 
 ---
 
