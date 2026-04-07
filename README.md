@@ -54,7 +54,9 @@ FedSIR consists of **three stages**:
 ### 1️⃣ Client Identification
 
 * Extract feature representations:
-  [z_i = f_\phi(x_i)]
+  $$
+  z_i = f_\phi(x_i)
+  $$
 * Compute class-wise SVD
 * Build similarity matrix:
   [S_{c,c'} = |v_c^T v_{c'}|]
