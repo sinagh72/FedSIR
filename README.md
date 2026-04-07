@@ -75,7 +75,7 @@ From clean clients, construct:
 
 * Dominant direction:
   ```math
-  \bar{v}_c^{(r)}$
+  \bar{v}_c^{(r)}
   ```
 * Residual subspace:
   ```math
@@ -86,16 +86,16 @@ For each sample:
 
 * Alignment score:
   ```math
-  $S^{(r)}(i,c)$
+  $S^{(r)}(i,c)
   ```
 * Residual score
   ```math
-  $S^{(n)}(i,c)$
+  $S^{(n)}(i,c)
   ```
 
 ✔ Relabel only if:
 ```math
-\hat{y}^{(r)} = \hat{y}^{(n)}$
+\hat{y}^{(r)} = \hat{y}^{(n)}
 ```
 👉 This ensures **high-confidence corrections only**
 
