@@ -302,23 +302,7 @@ fedsir/
 * Clients: 10
 
 ---
-
-## ⚠️ Limitations
-
-* Assumes **symmetric label noise**
-* Requires **sufficient class coverage** among clean clients
-* Performance depends on **feature quality**
-
----
-
-## 🔮 Future Work
-
-* Extend to **asymmetric noise**
-* Apply to **real-world FL datasets**
-* Explore **feature-level robustness beyond vision**
-
----
-
+<!-- TODO: add installation instructions 
 ## 📚 Citation
 
 ```bibtex
@@ -331,7 +315,7 @@ fedsir/
 ```
 
 ---
-
+-->
 ## 🤝 Acknowledgments
 
 This work explores a new direction in FL by leveraging **spectral geometry as supervision**, offering a principled alternative to loss-based noise handling.
